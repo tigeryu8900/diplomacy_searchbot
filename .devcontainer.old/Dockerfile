@@ -1,7 +1,4 @@
-FROM abakhtin/miniconda3_ubuntu:4.7.10
-
-ARG PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp
-ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp
+FROM mcr.microsoft.com/devcontainers/anaconda:1-3
 
 # Copy environment.yml (if found) to a temp location so we update the environment. Also
 # copy "noop.txt" so the COPY instruction does not fail if no environment.yml exists.
@@ -10,11 +7,4 @@ RUN if [ -f "/tmp/conda-tmp/environment.yml" ]; then umask 0002 && /opt/conda/bi
     && rm -rf /tmp/conda-tmp
 
 # [Optional] Uncomment this section to install additional OS packages.
-# Install build tools from apt
-RUN apt-get update
-# git fot checking out
-# wget for conda install
-# cmake build-essential autoconf libtool pkg-config to build postman and dipcc
-# libgoogle-glog-dev for dipcc
-
-RUN apt-get install --yes git wget cmake build-essential autoconf libtool pkg-config libgoogle-glog-dev
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive

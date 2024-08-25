@@ -1,30 +1,58 @@
 #!/bin/sh
 
+set -e
+
+# Initialize submodules
 git submodule sync
 git submodule update --init  # Non-recursive for now
 
-sudo apt install -y wget bzip2 ca-certificates curl git build-essential clang-format git wget cmake build-essential autoconf libtool pkg-config libgoogle-glog-dev
+# Create env and install deps
+. /opt/conda/etc/profile.d/conda.sh
 
-# Create conda env
-conda create --yes -n diplomacy python=3.8
+set -x
+conda create --yes -n diplomacy python=3.7
 source activate diplomacy
 
-# Install pytorch, pybind11
-conda install --yes pytorch::pytorch torchvision conda-forge::cudatoolkit=11.0
-conda install --yes pybind11
+# ci-hack: Install from conda to get cpu only version.
+conda install pytorch==1.4 cpuonly -c pytorch --yes
 
-# Install go for boringssl in grpc
-# We have some hacky patching code for protobuf that is not guaranteed
-# to work on versions other than this.
-conda install --yes go protobuf=3.19.1
+# For boringssl in grpc.
+conda install go --yes
 
-# Install python requirements
-pip install --use-pep517 -r requirements.txt
+pip install -r requirements.txt --progress-bar off
+conda install protobuf --yes
 
-# Local pip installs
-pip install --use-pep517 -e ./thirdparty/github/fairinternal/postman/nest/
-pip install --use-pep517 -e ./thirdparty/github/fairinternal/postman/postman/
-pip install --use-pep517 -e . -vv
+if ! ls /postman/postman*.whl; then
+    echo "Need full postman install"
+    git submodule update --recursive
+    pushd thirdparty/github/fairinternal/postman/
+    make compile_slow
+    make build_wheel
+    rm -rf /postman
+    mkdir /postman
+    cp -v postman/dist/*whl /postman/
+    cp -v postman/python/postman/rpc*so /postman/
+    popd
+fi
+pip install /postman/postman*.whl
+# Due to a bug postman wheel doesn't contain .so. So installing it manually.
+cp /postman/*.so $CONDA_PREFIX/lib/python3.*/site-packages/postman
+N_DIPCC_JOBS=8 SKIP_TESTS=1 make deps all
+pip install -U protobuf
+
+# Hello world
+source activate diplomacy
+python run.py --help
+
+# Check test game cache is up-to-date
+source activate diplomacy
+# Enable once the cache is deterministic
+# python tests/build_test_cache.py
+git status
+if ! git diff-index --quiet HEAD --; then
+    echo "ERROR: tests/build_test_cache.py produced new cache! Re-build and commit cache if it's expected."
+    exit 1
+fi
 
 # Make
 make
