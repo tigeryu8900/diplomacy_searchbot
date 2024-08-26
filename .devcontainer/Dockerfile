@@ -1,4 +1,4 @@
-FROM abakhtin/miniconda3_ubuntu:4.7.10
+FROM --platform=linux/x86_64 mcr.microsoft.com/devcontainers/miniconda:1-3
 
 ARG PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp
 ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp

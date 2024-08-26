@@ -12,6 +12,7 @@ parameterized
 psutil
 pre-commit
 pyzmq==23.2.1
+setuptools==58.2.0
 tabulate
 tensorboard
 torch

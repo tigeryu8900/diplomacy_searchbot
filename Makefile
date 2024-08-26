@@ -8,7 +8,7 @@ all: compile
 compile: | dipcc protos selfplay
 
 dipcc:
-	PYDIPCC_OUT_DIR=$(realpath ./fairdiplomacy) SKIP_TESTS=1 bash ./dipcc/compile.sh
+	PYDIPCC_OUT_DIR=$(realpath ./fairdiplomacy) SKIP_TESTS=1 bash ./dipccls /compile.sh
 
 selfplay:
 	mkdir -p build/selfplay
